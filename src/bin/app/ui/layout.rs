@@ -1,44 +1,52 @@
 use chrono::Local;
 use cursive::{
-    Cursive,
     align::HAlign,
     event::{Event, Key},
     theme::{BaseColor, Color, ColorStyle},
     view::{Nameable, Resizable},
     views::{DummyView, EditView, LinearLayout, Panel, ScrollView, TextView},
+    Cursive,
 };
 
 use crate::ui::handlers::handle_submit;
 use crate::ui::theme::create_app_theme;
 
-/// Builds and configures the Cursive TUI environment.
+/// Builds and configures the Cursive TUI environment with pure ASCII styling and widescreen (16:9) layout.
 pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
     let mut siv = Cursive::new();
     siv.set_theme(create_app_theme());
 
-    // 1. Top Header Banner
-    let header_content = format!(
-        "⚡ TTYME CHAT  │  👤 User: @{username}  │  🌐 Server: {server_addr}  │  🕒 {}",
-        Local::now().format("%Y-%m-%d %H:%M:%S")
-    );
-    let header = Panel::new(TextView::new(header_content).h_align(HAlign::Center))
-        .title(" TTYME v0.1.0 ")
+    // 1. Top Header Banner with Live Clock Placeholder
+    let header_info = format!(" TTYME CHAT  |  User: @{username}  |  Host: {server_addr} ");
+    let clock_init = format!("[ {} ]", Local::now().format("%I:%M:%S %p"));
+    let clock_view = TextView::new(clock_init).with_name("Clock");
+
+    let header_bar = LinearLayout::horizontal()
+        .child(TextView::new(header_info))
+        .child(DummyView.full_width())
+        .child(clock_view);
+
+    let header = Panel::new(header_bar)
+        .title("[ TTYME v0.1.0 ]")
         .title_position(HAlign::Left)
         .full_width();
 
+    // 2. Chat Messages Stream (Dynamic vertical expansion, takes all available space)
     let messages_view = TextView::new("").with_name("Messages");
 
     let messages_panel = Panel::new(
         ScrollView::new(messages_view)
             .scroll_strategy(cursive::view::ScrollStrategy::StickToBottom)
-            .min_height(20)
-            .full_width(),
+            .full_width()
+            .full_height(),
     )
-    .title(" 💬 Chat Stream ")
+    .title("[ MESSAGES ]")
     .title_position(HAlign::Center)
-    .full_width();
+    .full_width()
+    .full_height();
 
-    let prompt = TextView::new(" ❯ ");
+    // 3. Message Input Field with Prompt Symbol and High-Contrast Styling
+    let prompt = TextView::new(" >> ");
     let input = EditView::new()
         .filler(" ")
         .style(ColorStyle::new(
@@ -49,38 +57,40 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
         .with_name("Input")
         .full_width();
 
-    let input_row = LinearLayout::horizontal().child(prompt).child(input);
+    let input_row = LinearLayout::horizontal()
+        .child(prompt)
+        .child(input);
 
     let input_panel = Panel::new(input_row)
-        .title(" ✏ Message Input (Type here & press Enter) ")
+        .title("[ INPUT ] (Type message and press Enter | / for Commands)")
         .title_position(HAlign::Left)
         .full_width();
 
-    // 4. Quick Help / Status Bar Footer
-    let footer_text =
-        " [ESC] Quit  │  [Enter] Send  │  [/] Quick Command  │  /help  /clear  /quit ";
-    let footer = Panel::new(TextView::new(footer_text).h_align(HAlign::Center)).full_width();
+    // 4. Quick Help / Shortcuts Footer Bar (Always visible at the bottom)
+    let footer_text = " [ESC] Quit  |  [Enter] Send  |  [/] Commands  |  /help  /whoami  /time  /clear  /ping  /quit ";
+    let footer = Panel::new(TextView::new(footer_text).h_align(HAlign::Center))
+        .title("[ SHORTCUTS & COMMANDS ]")
+        .title_position(HAlign::Center)
+        .full_width();
 
+    // 5. Widescreen Layout (Utilizes the full terminal width & height without clipping)
     let main_layout = LinearLayout::vertical()
         .child(header)
-        .child(DummyView.fixed_height(1))
         .child(messages_panel)
-        .child(DummyView.fixed_height(1))
         .child(input_panel)
-        .child(DummyView.fixed_height(1))
         .child(footer);
 
-    let centered = LinearLayout::horizontal()
-        .child(DummyView.full_width())
-        .child(main_layout.min_width(70))
-        .child(DummyView.full_width());
+    let screen_wrapper = LinearLayout::horizontal()
+        .child(DummyView.fixed_width(1))
+        .child(main_layout.full_width().full_height())
+        .child(DummyView.fixed_width(1));
 
-    siv.add_fullscreen_layer(centered);
+    siv.add_fullscreen_layer(screen_wrapper);
 
     // Initial Focus on Input
     let _ = siv.focus_name("Input");
 
-    // Global Hotkeys
+    // Global Keybindings
     siv.add_global_callback(Event::Key(Key::Esc), |s| s.quit());
     siv.add_global_callback('/', |s| {
         let _ = s.call_on_name("Input", |view: &mut EditView| view.set_content("/"));

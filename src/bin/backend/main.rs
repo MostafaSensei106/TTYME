@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let (socket, addr) = listener.accept().await?;
         println!(
             "\n┌─[{}] New Connection\n└─ Address: {}\n",
-            Local::now().format("%H:%M:%S"),
+            Local::now().format("%I:%M:%S %p"),
             addr
         );
         let tx = tx.clone();

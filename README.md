@@ -281,7 +281,7 @@ Every event broadcast by the server is formatted as a JSON object adhering to [`
   "user_name": "Alice",
   "message_content": "Joined the chat",
   "message_type": "SystemNotification",
-  "timestamp": "14:40:12"
+  "timestamp": "06:40:12 PM"
 }
 ```
 
@@ -290,7 +290,7 @@ Every event broadcast by the server is formatted as a JSON object adhering to [`
   "user_name": "Alice",
   "message_content": "Hey everyone, welcome to TTYME!",
   "message_type": "UserMessage",
-  "timestamp": "14:40:35"
+  "timestamp": "06:40:35 PM"
 }
 ```
 
@@ -344,9 +344,16 @@ pub enum MessageType {
 | `Enter` | Input Box | Sends the current message buffer or executes the command |
 | `Esc` | Anywhere | Quits the TTYME application immediately |
 | `/` | Anywhere | Automatically places focus into the input box and begins a command |
-| `/help` | In Chat Input | Prints available commands to your local message view |
+| `/help` | In Chat Input | Prints complete command reference with descriptions |
 | `/clear` | In Chat Input | Clears all current messages from your message window |
-| `/quit` | In Chat Input | Gracefully exits the application |
+| `/whoami` | In Chat Input | Displays user profile, host, and connection status |
+| `/time` | In Chat Input | Displays the current local date and 12-hour AM/PM time |
+| `/ping` | In Chat Input | Verifies local server connection responsiveness |
+| `/shrug` | In Chat Input | Sends ASCII shrug emoticon: `¯\_(ツ)_/¯` |
+| `/tableflip` | In Chat Input | Sends ASCII tableflip emoticon: `(╯°□°)╯︵ ┻━┻` |
+| `/unflip` | In Chat Input | Sends ASCII unflip emoticon: `┬─┬ノ( º _ ºノ)` |
+| `/me <action>` | In Chat Input | Broadcasts an IRC-style action line (`* User action`) |
+| `/quit`, `/exit` | In Chat Input | Gracefully exits the application |
 
 ---
 
