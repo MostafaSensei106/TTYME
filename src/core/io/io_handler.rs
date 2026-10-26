@@ -18,7 +18,7 @@ pub async fn handle_connection(
         return;
     };
 
-    broadcast_system_message(&tx, &username, "Joined the chat");
+    broadcast_system_message(&tx, &username, " Joined the chat");
     handle_chat_loop(&mut reader, &mut writer, &username, &tx, &mut rx).await;
     broadcast_system_message(&tx, &username, "Left the chat");
 
