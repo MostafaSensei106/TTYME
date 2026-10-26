@@ -10,7 +10,8 @@ use crate::ui::message::{format_error_notice, format_info_notice};
 /// Handles submission from the chat input box.
 pub fn handle_submit(s: &mut Cursive, text: String) {
     let text = text.trim().to_string();
-    s.call_on_name("Input", |view: &mut EditView| view.set_content(""));
+    let _ = s.call_on_name("Input", |view: &mut EditView| view.set_content(""));
+    let _ = s.focus_name("Input");
 
     if text.is_empty() {
         return;

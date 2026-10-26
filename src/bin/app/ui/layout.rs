@@ -3,7 +3,8 @@ use cursive::{
     Cursive,
     align::HAlign,
     event::{Event, Key},
-    view::{Nameable, Resizable, Scrollable},
+    theme::{BaseColor, Color, ColorStyle},
+    view::{Nameable, Resizable},
     views::{DummyView, EditView, LinearLayout, Panel, ScrollView, TextView},
 };
 
@@ -25,32 +26,33 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
         .title_position(HAlign::Left)
         .full_width();
 
-    // 2. Chat Messages Stream
-    let messages_view = TextView::new("")
-        .with_name("Messages")
-        .min_height(20)
-        .scrollable();
+    let messages_view = TextView::new("").with_name("Messages");
 
     let messages_panel = Panel::new(
         ScrollView::new(messages_view)
             .scroll_strategy(cursive::view::ScrollStrategy::StickToBottom)
-            .min_height(22)
+            .min_height(20)
             .full_width(),
     )
     .title(" 💬 Chat Stream ")
     .title_position(HAlign::Center)
     .full_width();
 
-    // 3. Message Input Field
+    let prompt = TextView::new(" ❯ ");
     let input = EditView::new()
+        .filler(" ")
+        .style(ColorStyle::new(
+            Color::Light(BaseColor::White),
+            Color::Dark(BaseColor::Black),
+        ))
         .on_submit(|s, text| handle_submit(s, text.to_string()))
         .with_name("Input")
-        .max_height(2)
-        .min_width(50)
         .full_width();
 
-    let input_panel = Panel::new(input)
-        .title(" ✏ Type Message (Press Enter to Send) ")
+    let input_row = LinearLayout::horizontal().child(prompt).child(input);
+
+    let input_panel = Panel::new(input_row)
+        .title(" ✏ Message Input (Type here & press Enter) ")
         .title_position(HAlign::Left)
         .full_width();
 
@@ -59,7 +61,6 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
         " [ESC] Quit  │  [Enter] Send  │  [/] Quick Command  │  /help  /clear  /quit ";
     let footer = Panel::new(TextView::new(footer_text).h_align(HAlign::Center)).full_width();
 
-    // 5. Overall Vertical Layout with Horizontal Centering
     let main_layout = LinearLayout::vertical()
         .child(header)
         .child(DummyView.fixed_height(1))
@@ -76,10 +77,14 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
 
     siv.add_fullscreen_layer(centered);
 
+    // Initial Focus on Input
+    let _ = siv.focus_name("Input");
+
     // Global Hotkeys
     siv.add_global_callback(Event::Key(Key::Esc), |s| s.quit());
     siv.add_global_callback('/', |s| {
-        s.call_on_name("Input", |view: &mut EditView| view.set_content("/"));
+        let _ = s.call_on_name("Input", |view: &mut EditView| view.set_content("/"));
+        let _ = s.focus_name("Input");
     });
 
     siv

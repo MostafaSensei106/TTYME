@@ -10,7 +10,10 @@ pub fn format_chat_message(message: &ChatMessage, current_user: &str) -> StyledS
 
     match message.message_type {
         MessageType::UserMessage => {
-            let is_me = message.user_name.trim().eq_ignore_ascii_case(current_user.trim());
+            let is_me = message
+                .user_name
+                .trim()
+                .eq_ignore_ascii_case(current_user.trim());
 
             // Timestamp: [HH:MM:SS]
             s.append_styled(format!("[{}] ", message.timestamp), time_style);
@@ -75,6 +78,7 @@ pub fn format_error_notice(notice: &str) -> StyledString {
         Style::from(Color::Light(BaseColor::Red)).combine(Effect::Bold),
     );
     s.append_styled(notice, Style::from(Color::Light(BaseColor::Red)));
+
     s.append_plain("\n");
     s
 }
