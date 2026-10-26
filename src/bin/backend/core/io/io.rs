@@ -1,6 +1,6 @@
 use chrono::Local;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    io::{AsyncBufReadExt, AsyncRead, AsyncWrite, AsyncWriteExt, BufReader},
     net::TcpStream,
     sync::broadcast,
 };
@@ -14,23 +14,49 @@ pub async fn handle_connection(
 ) {
     let (reader, mut writer) = socket.split();
     let mut reader = BufReader::new(reader);
-    let mut username = String::new();
-
-    if reader.read_line(&mut username).await.unwrap_or(0) == 0 {
+    let Some(username) = read_username(&mut reader).await else {
         return;
-    }
-    let username = username.trim().to_string();
+    };
 
-    let join_message = serde_json::to_string(&ChatMessage {
-        user_name: username.clone(),
-        message_content: "Joined the chat".to_string(),
+    broadcast_system_message(&tx, &username, "Joined the chat");
+    handle_chat_loop(&mut reader, &mut writer, &username, &tx, &mut rx).await;
+    broadcast_system_message(&tx, &username, "Left the chat");
+
+    println!(
+        "[{}] {} disconnected",
+        Local::now().format("%H:%M:%S"),
+        username
+    );
+}
+
+async fn read_username<R: AsyncRead + Unpin>(reader: &mut BufReader<R>) -> Option<String> {
+    let mut username = String::new();
+    if reader.read_line(&mut username).await.unwrap_or(0) == 0 {
+        return None;
+    }
+    Some(username.trim().to_string())
+}
+
+fn broadcast_system_message(tx: &broadcast::Sender<String>, username: &str, content: &str) {
+    let message = ChatMessage {
+        user_name: username.to_string(),
+        message_content: content.to_string(),
         message_type: MessageType::SystemNotification,
         timestamp: Local::now().format("%H:%M:%S").to_string(),
-    })
-    .unwrap();
+    };
+    let _ = tx.send(serde_json::to_string(&message).unwrap());
+}
 
-    let _ = tx.send(join_message);
-
+async fn handle_chat_loop<R, W>(
+    reader: &mut BufReader<R>,
+    writer: &mut W,
+    username: &str,
+    tx: &broadcast::Sender<String>,
+    rx: &mut broadcast::Receiver<String>,
+) where
+    R: AsyncRead + Unpin,
+    W: AsyncWrite + Unpin,
+{
     let mut line = String::new();
     loop {
         tokio::select! {
@@ -47,15 +73,7 @@ pub async fn handle_connection(
                     continue;
                 }
 
-                let chat_message = ChatMessage {
-                    user_name: username.clone(),
-                    message_content: message.to_string(),
-                    message_type: MessageType::UserMessage,
-                    timestamp: Local::now().format("%H:%M:%S").to_string(),
-                };
-
-                let json = serde_json::to_string(&chat_message).unwrap();
-                tx.send(json).unwrap();
+                broadcast_user_message(tx, username, message);
                 line.clear();
             }
             result = rx.recv() => {
@@ -73,19 +91,14 @@ pub async fn handle_connection(
             }
         }
     }
+}
 
-    let leave_message = serde_json::to_string(&ChatMessage {
-        user_name: username.clone(),
-        message_content: "Left the chat".to_string(),
-        message_type: MessageType::SystemNotification,
+fn broadcast_user_message(tx: &broadcast::Sender<String>, username: &str, content: &str) {
+    let message = ChatMessage {
+        user_name: username.to_string(),
+        message_content: content.to_string(),
+        message_type: MessageType::UserMessage,
         timestamp: Local::now().format("%H:%M:%S").to_string(),
-    })
-    .unwrap();
-    tx.send(leave_message).unwrap();
-
-    println!(
-        "[{}] {} disconnected",
-        Local::now().format("%H:%M:%S"),
-        username
-    );
+    };
+    tx.send(serde_json::to_string(&message).unwrap()).unwrap();
 }
