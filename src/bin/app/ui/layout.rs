@@ -1,11 +1,11 @@
 use chrono::Local;
 use cursive::{
+    Cursive,
     align::HAlign,
     event::{Event, Key},
     theme::{BaseColor, Color, ColorStyle},
     view::{Nameable, Resizable},
     views::{DummyView, EditView, LinearLayout, Panel, ScrollView, TextView},
-    Cursive,
 };
 
 use crate::ui::handlers::handle_submit;
@@ -16,7 +16,7 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
     let mut siv = Cursive::new();
     siv.set_theme(create_app_theme());
 
-    // 1. Top Header Banner with Live Clock Placeholder
+    // Top Header Banner with Live Clock Placeholder
     let header_info = format!(" TTYME CHAT  |  User: @{username}  |  Host: {server_addr} ");
     let clock_init = format!("[ {} ]", Local::now().format("%I:%M:%S %p"));
     let clock_view = TextView::new(clock_init).with_name("Clock");
@@ -31,7 +31,7 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
         .title_position(HAlign::Left)
         .full_width();
 
-    // 2. Chat Messages Stream (Dynamic vertical expansion, takes all available space)
+    // Chat Messages Stream (Dynamic vertical expansion, takes all available space)
     let messages_view = TextView::new("").with_name("Messages");
 
     let messages_panel = Panel::new(
@@ -45,7 +45,7 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
     .full_width()
     .full_height();
 
-    // 3. Message Input Field with Prompt Symbol and High-Contrast Styling
+    // Message Input Field with Prompt Symbol and High-Contrast Styling
     let prompt = TextView::new(" >> ");
     let input = EditView::new()
         .filler(" ")
@@ -57,23 +57,21 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
         .with_name("Input")
         .full_width();
 
-    let input_row = LinearLayout::horizontal()
-        .child(prompt)
-        .child(input);
+    let input_row = LinearLayout::horizontal().child(prompt).child(input);
 
     let input_panel = Panel::new(input_row)
         .title("[ INPUT ] (Type message and press Enter | / for Commands)")
         .title_position(HAlign::Left)
         .full_width();
 
-    // 4. Quick Help / Shortcuts Footer Bar (Always visible at the bottom)
+    // Quick Help / Shortcuts Footer Bar (Always visible at the bottom)
     let footer_text = " [ESC] Quit  |  [Enter] Send  |  [/] Commands  |  /help  /whoami  /time  /clear  /kiwi  /gigachad  /bruh  /rip ";
     let footer = Panel::new(TextView::new(footer_text).h_align(HAlign::Center))
         .title("[ SHORTCUTS & COMMANDS ]")
         .title_position(HAlign::Center)
         .full_width();
 
-    // 5. Widescreen Layout (Utilizes the full terminal width & height without clipping)
+    // Widescreen Layout (Utilizes the full terminal width & height without clipping)
     let main_layout = LinearLayout::vertical()
         .child(header)
         .child(messages_panel)

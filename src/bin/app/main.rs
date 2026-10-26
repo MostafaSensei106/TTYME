@@ -22,24 +22,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let config = Constants::default();
     let server_addr = format!("{}:{}", config.host, config.port);
 
-    // 1. Establish connection and complete initial handshake
+    // Establish connection and complete initial handshake
     let (reader, writer) = connect_server(config.host, config.port, &username).await?;
 
-    // 2. Construct TUI view hierarchy
+    //  Construct TUI view hierarchy
     let mut siv = build_ui(&username, &server_addr);
     let sink = siv.cb_sink().clone();
 
-    // 3. Store application state in Cursive user_data for UI callbacks
+    // tore application state in Cursive user_data for UI callbacks
     siv.set_user_data(AppState {
         writer,
         username: username.clone(),
         server_addr: server_addr.clone(),
     });
 
-    // 4. Start background listener for incoming broadcast messages
+    //  Start background listener for incoming broadcast messages
     spawn_reader(reader, sink.clone(), username);
 
-    // 5. Start live ticking clock updater (12-hour AM/PM format)
+    // tart live ticking clock updater (12-hour AM/PM format)
     let clock_sink = sink;
     tokio::spawn(async move {
         let mut ticker = tokio::time::interval(tokio::time::Duration::from_secs(1));
@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     });
 
-    // 6. Run the Cursive interactive event loop
+    // Run the Cursive interactive event loop
     siv.run();
 
     Ok(())

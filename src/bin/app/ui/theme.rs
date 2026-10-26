@@ -4,7 +4,7 @@ use cursive::theme::{
 
 /// Creates a polished, high-contrast retro theme for TTYME.
 pub fn create_app_theme() -> Theme {
-    let mut theme = Theme::default();
+    let mut theme: Theme = Theme::default();
     theme.shadow = true;
     theme.borders = BorderStyle::Simple;
 

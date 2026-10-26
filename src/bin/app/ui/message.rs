@@ -10,21 +10,24 @@ pub fn format_chat_message(message: &ChatMessage, current_user: &str) -> StyledS
 
     match message.message_type {
         MessageType::UserMessage => {
-            let is_me = message.user_name.trim().eq_ignore_ascii_case(current_user.trim());
+            let is_me = message
+                .user_name
+                .trim()
+                .eq_ignore_ascii_case(current_user.trim());
 
-            // 1. Timestamp in 12-hour format: [06:30:15 PM]
             s.append_styled(format!("[{}] ", message.timestamp), time_style);
 
             // Check if this is an IRC-style action (/me)
             if let Some(action) = message.message_content.strip_prefix("/me ") {
-                let action_style = Style::from(Color::Light(BaseColor::Magenta)).combine(Effect::Bold);
+                let action_style =
+                    Style::from(Color::Light(BaseColor::Magenta)).combine(Effect::Bold);
                 s.append_styled(format!("* {} ", message.user_name), action_style);
                 s.append_styled(action, Style::from(Color::Light(BaseColor::Magenta)));
                 s.append_plain("\n");
                 return s;
             }
 
-            // 2. Sender Badge
+            // Sender Badge
             if is_me {
                 let me_style = Style::from(Color::Light(BaseColor::Green)).combine(Effect::Bold);
                 s.append_styled("<You>", me_style);
@@ -55,7 +58,7 @@ pub fn format_chat_message(message: &ChatMessage, current_user: &str) -> StyledS
     s
 }
 
-/// Formats an informational notice (e.g. /help or /time).
+/// Formats an informational notice ( /help or /time ).
 pub fn format_info_notice(notice: &str) -> StyledString {
     let mut s = StyledString::new();
     let time = Local::now().format("%I:%M:%S %p").to_string();
