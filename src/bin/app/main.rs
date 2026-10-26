@@ -1,4 +1,4 @@
-use std::{env, error::Error};
+use std::{env, error::Error, sync::Arc};
 
 use chrono::Local;
 use cursive::{
@@ -8,9 +8,9 @@ use cursive::{
     view::{Nameable, Resizable, Scrollable},
     views::{Dialog, DummyView, EditView, LinearLayout, Panel, ScrollView, TextView},
 };
-use tokio::stream;
+use tokio::{io::AsyncWriteExt, net::TcpStream, sync::Mutex};
 
-use crate::core::theme::theme::create_retro_theme;
+use crate::core::theme::retro::create_retro_theme;
 mod core;
 
 #[tokio::main]
@@ -77,7 +77,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         s.call_on_name("Input", |view: &mut EditView| view.set_content("/"));
     });
 
-    // let stream = Tcp
+    let stream = TcpStream::connect("127.0.0.1:8080").await?;
+    let (reader, mut writer) = stream.into_split();
+    writer
+        .write_all(format!("{}/n", username).as_bytes())
+        .await?;
+
+    let wirter = Arc::new(Mutex::new(writer));
 
     siv.run();
 

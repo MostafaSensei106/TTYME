@@ -4,7 +4,7 @@ use chrono::Local;
 use core::constants::config::Constants;
 use tokio::{net::TcpListener, sync::broadcast};
 
-use crate::core::io::io::handle_connection;
+use crate::core::io::io_handler::handle_connection;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

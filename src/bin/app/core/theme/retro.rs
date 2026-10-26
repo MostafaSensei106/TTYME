@@ -6,5 +6,5 @@ pub fn create_retro_theme() -> Theme {
     theme.borders = BorderStyle::Simple;
     let palette = Palette::retro();
     theme.palette = palette;
-    return theme;
+    theme
 }
