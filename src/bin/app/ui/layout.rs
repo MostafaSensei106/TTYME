@@ -67,7 +67,7 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
         .full_width();
 
     // 4. Quick Help / Shortcuts Footer Bar (Always visible at the bottom)
-    let footer_text = " [ESC] Quit  |  [Enter] Send  |  [/] Commands  |  /help  /whoami  /time  /clear  /eggplant  /cucumber  /gigachad  /rip ";
+    let footer_text = " [ESC] Quit  |  [Enter] Send  |  [/] Commands  |  /help  /whoami  /time  /clear  /kiwi  /gigachad  /bruh  /rip ";
     let footer = Panel::new(TextView::new(footer_text).h_align(HAlign::Center))
         .title("[ SHORTCUTS & COMMANDS ]")
         .title_position(HAlign::Center)

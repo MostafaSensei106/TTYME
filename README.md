@@ -350,10 +350,9 @@ pub enum MessageType {
 | `/time` | In Chat Input | Displays the current local date and 12-hour AM/PM time |
 | `/ping` | In Chat Input | Verifies local server connection responsiveness |
 | `/shrug` | In Chat Input | Sends ASCII shrug emoticon: `¯\_(ツ)_/¯` |
+| `/kiwi` | In Chat Input | Sends cute Japanese Kaomoji kiwi: `(◕ө◕) [Kiwi]` |
 | `/tableflip` | In Chat Input | Sends ASCII tableflip emoticon: `(╯°□°)╯︵ ┻━┻` |
 | `/unflip` | In Chat Input | Sends ASCII unflip emoticon: `┬─┬ノ( º _ ºノ)` |
-| `/eggplant` | In Chat Input | Sends ASCII eggplant emoticon: `(づ｡◕‿‿◕｡)づ [Eggplant] ~-(:::)` |
-| `/cucumber`, `/pickle` | In Chat Input | Sends ASCII cucumber/pickle emote |
 | `/gigachad`, `/chad` | In Chat Input | Sends Gigachad ASCII emote |
 | `/rip`, `/f` | In Chat Input | Sends `[RIP] Press F to pay respects` |
 | `/gg` | In Chat Input | Sends `[GG] Good game, well played!` |

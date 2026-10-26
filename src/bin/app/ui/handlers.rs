@@ -1,7 +1,7 @@
-use std::sync::Arc;
 use chrono::Local;
-use cursive::views::{EditView, TextView};
 use cursive::Cursive;
+use cursive::views::{EditView, TextView};
+use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::sync::Mutex;
@@ -52,6 +52,9 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
                    /quit, /exit - Disconnect and exit TTYME\n\
                  \n\
                  [ Emotes & Memes ]\n\
+                   /kiwi        - (◕ө◕) [Kiwi]\n\
+                   /kawaii      - (✿◕‿◕) [Kawaii]\n\
+                   /uwu         - (ᵘﻌᵘ) [uwu]\n\
                    /shrug       - ¯\\_(ツ)_/¯\n\
                    /tableflip   - (╯°□°)╯︵ ┻━┻\n\
                    /unflip      - ┬─┬ノ( º _ ºノ)\n\
@@ -74,6 +77,25 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
                    /sleep       - (ᴗ_ ᴗ。) zzz...\n\
                    /salute      - (｀-´)ゞ o7\n\
                    /popcorn     - ( ˘▽˘)っ♨ [Eats popcorn]\n\
+                   /skull       - [DEAD] (x_x)\n\
+                   /nerd        - ( ⌐■_■) ☝ Actually...\n\
+                   /clown       - ( 🤡 ) [Honk Honk]\n\
+                   /party       - (★^O^★) ~* Party Time! *~\n\
+                   /praise      - [PRAISE] \\('o')/ Praise the Sun!\n\
+                   /copium      - [COPIUM] (´• ω •) *inhales copium*\n\
+                   /cry         - (╥﹏╥) *sobs*\n\
+                   /cool        - ( •_•)>⌐■-■ (⌐■_■) Deal with it.\n\
+                 \n\
+                 [ Arsenal Banter ]\n\
+                   /gooner      - Arsenal fan detected\n\
+                   /arsenal     - Arsenal banter\n\
+                   /bottled     - Arsenal bottled it again\n\
+                   /fourth      - 4th place is the real trophy\n\
+                   /trophyless  - Arsenal's trophy cabinet\n\
+                   /arteta      - Trust the process\n\
+                 \n\
+                 [ ASCII Art ]\n\
+                   /gonner      - Big ASCII drawing\n\
                  =============================================================",
             );
             append_to_messages(s, help_msg);
@@ -99,15 +121,17 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
             }
         }
         "/ping" => {
-            append_to_messages(s, format_info_notice("PONG! Connection to server is alive."));
+            append_to_messages(
+                s,
+                format_info_notice("PONG! Connection to server is alive."),
+            );
         }
         _ if text.starts_with("/me ") => {
             send_network_payload(state, text, s);
         }
         _ if text.starts_with('/') => {
-            let error_msg = format_error_notice(
-                "Unknown command. Type /help to see all available commands.",
-            );
+            let error_msg =
+                format_error_notice("Unknown command. Type /help to see all available commands.");
             append_to_messages(s, error_msg);
         }
         _ => {
@@ -119,9 +143,9 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
 /// Resolves quick ASCII emotes and memes commands.
 fn resolve_emoticon_command(cmd: &str) -> Option<&'static str> {
     match cmd {
-        "/eggplant" => Some("(づ｡◕‿‿◕｡)づ [Eggplant] ~-(:::)"),
-        "/cucumber" => Some("[Cucumber] ╰( ͡° ͜ʖ ͡° )つ──☆*:・ﾟ"),
-        "/pickle" => Some("[Pickle] ( •_•) Pickle Rick!"),
+        "/kiwi" => Some("(◕ө◕) [Kiwi]"),
+        "/kawaii" => Some("(✿◕‿◕) [Kawaii]"),
+        "/uwu" => Some("(ᵘﻌᵘ) [uwu]"),
         "/shrug" => Some("¯\\_(ツ)_/¯"),
         "/tableflip" => Some("(╯°□°)╯︵ ┻━┻"),
         "/unflip" => Some("┬─┬ノ( º _ ºノ)"),
@@ -144,10 +168,44 @@ fn resolve_emoticon_command(cmd: &str) -> Option<&'static str> {
         "/sleep" => Some("(ᴗ_ ᴗ。) zzz..."),
         "/salute" | "/o7" => Some("(｀-´)ゞ o7"),
         "/popcorn" => Some("( ˘▽˘)っ♨ [Eats popcorn]"),
+        "/skull" => Some("[DEAD] (x_x) 💀"),
+        "/nerd" => Some("( ⌐■_■) ☝ Actually..."),
+        "/clown" => Some("( 🤡 ) [Honk Honk]"),
+        "/party" => Some("(★^O^★) ~* Party Time! *~"),
+        "/praise" => Some("[PRAISE] \\('o')/ Praise the Sun!"),
+        "/copium" => Some("[COPIUM] (´• ω •) *inhales copium*"),
+        "/cry" => Some("(╥﹏╥) *sobs*"),
+        "/cool" => Some("( •_•)>⌐■-■ (⌐■_■) Deal with it."),
+
+        // Arsenal banter
+        "/gooner" => Some("[GOONER] Arsenal fan detected... trophy cabinet loading 0%"),
+        "/arsenal" => Some("Arsenal: Elite at leading the table until it matters"),
+        "/bottled" => Some("[BOTTLED] Arsenal bottled it again, classic!"),
+        "/fourth" | "/4th" => Some("St. Totteringham's Day? Nah, 4th place is the real trophy"),
+        "/trophyless" => Some("Arsenal trophy cabinet: [ EMPTY ] (ಠ_ಠ) Bruh..."),
+        "/arteta" => Some("Arteta: 'Trust the process' ¯\\_(ツ)_/¯"),
+
+        // ASCII drawing (multi-line, sent line by line)
+        "/gonner" => Some(
+            r#"    ,-.
+   (   )
+   |   |
+   |   |
+   |   |
+   |   |
+   |   |
+   |   |
+ ,-'   '-.
+(   ) (   )
+ `-'   `-'"#,
+        ),
+
         _ => None,
     }
 }
 
+/// Sends a payload to the server. Multi-line payloads are sent one line at a
+/// time, since the server splits messages on '\n'.
 fn send_network_payload(state: Option<AppState>, payload: String, s: &mut Cursive) {
     let Some(st) = state else {
         let err = format_error_notice("Connection is unavailable. Message not sent.");
@@ -156,8 +214,12 @@ fn send_network_payload(state: Option<AppState>, payload: String, s: &mut Cursiv
     };
 
     tokio::spawn(async move {
+        // Hold the lock for the whole loop so other messages can't
+        // interleave between the lines of a drawing.
         let mut writer = st.writer.lock().await;
-        let _ = writer.write_all(format!("{payload}\n").as_bytes()).await;
+        for line in payload.lines() {
+            let _ = writer.write_all(format!("{line}\n").as_bytes()).await;
+        }
     });
 }
 
