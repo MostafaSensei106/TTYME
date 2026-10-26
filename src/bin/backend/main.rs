@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         );
         let tx = tx.clone();
         let rx = tx.subscribe();
-        tokio::spawn(async move { handle_connection(socket, tx, rx) });
+        tokio::spawn(async move { handle_connection(socket, tx, rx).await });
     }
 
     Ok(())
