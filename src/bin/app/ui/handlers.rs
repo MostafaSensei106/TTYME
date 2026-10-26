@@ -28,6 +28,12 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
 
     let state = s.user_data::<AppState>().cloned();
 
+    // Check if the command is a quick meme / emoticon command
+    if let Some(emoticon) = resolve_emoticon_command(&text) {
+        send_network_payload(state, emoticon.to_string(), s);
+        return;
+    }
+
     match text.as_str() {
         "/quit" | "/exit" => s.quit(),
         "/clear" => {
@@ -36,16 +42,38 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
         "/help" => {
             let help_msg = format_info_notice(
                 "===================== COMMAND REFERENCE =====================\n\
-                 /help          - Display this command reference\n\
-                 /clear         - Clear the chat message history\n\
-                 /whoami        - Display your user profile and connection\n\
-                 /time          - Display current 12-hour system time\n\
-                 /ping          - Ping local connection check\n\
-                 /shrug         - Send shrug ascii: ¯\\_(ツ)_/¯\n\
-                 /tableflip     - Send tableflip ascii: (╯°□°)╯︵ ┻━┻\n\
-                 /unflip        - Send unflip ascii: ┬─┬ノ( º _ ºノ)\n\
-                 /me <action>   - Broadcast an action (* User action)\n\
-                 /quit, /exit   - Disconnect and exit TTYME\n\
+                 [ Core Commands ]\n\
+                   /help        - Display this command reference\n\
+                   /clear       - Clear the chat message history\n\
+                   /whoami      - Display your user profile and connection\n\
+                   /time        - Display current 12-hour system time\n\
+                   /ping        - Ping local connection check\n\
+                   /me <act>    - Broadcast an action (* User action)\n\
+                   /quit, /exit - Disconnect and exit TTYME\n\
+                 \n\
+                 [ Emotes & Memes ]\n\
+                   /shrug       - ¯\\_(ツ)_/¯\n\
+                   /tableflip   - (╯°□°)╯︵ ┻━┻\n\
+                   /unflip      - ┬─┬ノ( º _ ºノ)\n\
+                   /gigachad    - (•_•) ( •_•)>⌐■-■ (⌐■_■) [CHAD]\n\
+                   /bruh        - (ಠ_ಠ) Bruh...\n\
+                   /rip         - [RIP] Press F to pay respects\n\
+                   /gg          - [GG] Good game, well played!\n\
+                   /ez          - [EZ] Easy peasy, lemon squeezy!\n\
+                   /noob        - [NOOB] Skill issue detected!\n\
+                   /sus         - ඞ [SUS] Impostor detected!\n\
+                   /facepalm    - (－‸ლ) *facepalm*\n\
+                   /cheers      - ( ﾟヮﾟ)/* [Cheers!]\n\
+                   /hype        - \\(^o^)/ HYPE HYPE HYPE!\n\
+                   /doge        - (◕ᴥ◕) Such chat, much wow!\n\
+                   /cat         - (=^･ω･^=) Meow!\n\
+                   /magic       - (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Magic!\n\
+                   /rage        - (ノಠ益ಠ)ノ彡┻━┻\n\
+                   /dance       - ♪┏(・o･)┛♪┗ ( ･o･) ┓♪\n\
+                   /flex        - ᕙ(⇀‸↼‶)ᕗ FLEX!\n\
+                   /sleep       - (ᴗ_ ᴗ。) zzz...\n\
+                   /salute      - (｀-´)ゞ o7\n\
+                   /popcorn     - ( ˘▽˘)っ♨ [Eats popcorn]\n\
                  =============================================================",
             );
             append_to_messages(s, help_msg);
@@ -73,17 +101,7 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
         "/ping" => {
             append_to_messages(s, format_info_notice("PONG! Connection to server is alive."));
         }
-        "/shrug" => {
-            send_network_payload(state, "¯\\_(ツ)_/¯".to_string(), s);
-        }
-        "/tableflip" => {
-            send_network_payload(state, "(╯°□°)╯︵ ┻━┻".to_string(), s);
-        }
-        "/unflip" => {
-            send_network_payload(state, "┬─┬ノ( º _ ºノ)".to_string(), s);
-        }
         _ if text.starts_with("/me ") => {
-            // Forward action message directly to server
             send_network_payload(state, text, s);
         }
         _ if text.starts_with('/') => {
@@ -95,6 +113,38 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
         _ => {
             send_network_payload(state, text, s);
         }
+    }
+}
+
+/// Resolves quick ASCII emotes and memes commands.
+fn resolve_emoticon_command(cmd: &str) -> Option<&'static str> {
+    match cmd {
+        "/eggplant" => Some("(づ｡◕‿‿◕｡)づ [Eggplant] ~-(:::)"),
+        "/cucumber" => Some("[Cucumber] ╰( ͡° ͜ʖ ͡° )つ──☆*:・ﾟ"),
+        "/pickle" => Some("[Pickle] ( •_•) Pickle Rick!"),
+        "/shrug" => Some("¯\\_(ツ)_/¯"),
+        "/tableflip" => Some("(╯°□°)╯︵ ┻━┻"),
+        "/unflip" => Some("┬─┬ノ( º _ ºノ)"),
+        "/gigachad" | "/chad" => Some("(•_•) ( •_•)>⌐■-■ (⌐■_■) [CHAD]"),
+        "/bruh" => Some("(ಠ_ಠ) Bruh..."),
+        "/rip" | "/f" => Some("[RIP] Press F to pay respects"),
+        "/gg" => Some("[GG] Good game, well played!"),
+        "/ez" => Some("[EZ] Easy peasy, lemon squeezy!"),
+        "/noob" => Some("[NOOB] Skill issue detected!"),
+        "/sus" => Some("ඞ [SUS] Impostor detected!"),
+        "/facepalm" => Some("(－‸ლ) *facepalm*"),
+        "/cheers" => Some("( ﾟヮﾟ)/* [Cheers!]"),
+        "/hype" => Some("\\(^o^)/ HYPE HYPE HYPE!"),
+        "/doge" => Some("(◕ᴥ◕) Such chat, much wow!"),
+        "/cat" => Some("(=^･ω･^=) Meow!"),
+        "/magic" => Some("(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Magic!"),
+        "/rage" => Some("(ノಠ益ಠ)ノ彡┻━┻"),
+        "/dance" => Some("♪┏(・o･)┛♪┗ ( ･o･) ┓♪"),
+        "/flex" => Some("ᕙ(⇀‸↼‶)ᕗ FLEX!"),
+        "/sleep" => Some("(ᴗ_ ᴗ。) zzz..."),
+        "/salute" | "/o7" => Some("(｀-´)ゞ o7"),
+        "/popcorn" => Some("( ˘▽˘)っ♨ [Eats popcorn]"),
+        _ => None,
     }
 }
 

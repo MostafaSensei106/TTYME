@@ -352,6 +352,19 @@ pub enum MessageType {
 | `/shrug` | In Chat Input | Sends ASCII shrug emoticon: `¯\_(ツ)_/¯` |
 | `/tableflip` | In Chat Input | Sends ASCII tableflip emoticon: `(╯°□°)╯︵ ┻━┻` |
 | `/unflip` | In Chat Input | Sends ASCII unflip emoticon: `┬─┬ノ( º _ ºノ)` |
+| `/eggplant` | In Chat Input | Sends ASCII eggplant emoticon: `(づ｡◕‿‿◕｡)づ [Eggplant] ~-(:::)` |
+| `/cucumber`, `/pickle` | In Chat Input | Sends ASCII cucumber/pickle emote |
+| `/gigachad`, `/chad` | In Chat Input | Sends Gigachad ASCII emote |
+| `/rip`, `/f` | In Chat Input | Sends `[RIP] Press F to pay respects` |
+| `/gg` | In Chat Input | Sends `[GG] Good game, well played!` |
+| `/ez` | In Chat Input | Sends `[EZ] Easy peasy, lemon squeezy!` |
+| `/noob` | In Chat Input | Sends `[NOOB] Skill issue detected!` |
+| `/sus` | In Chat Input | Sends Among Us ASCII emote `ඞ [SUS]` |
+| `/doge` | In Chat Input | Sends Doge ASCII emote `(◕ᴥ◕)` |
+| `/cat` | In Chat Input | Sends Cat ASCII emote `(=^･ω･^=)` |
+| `/dance` | In Chat Input | Sends Dancing ASCII emote |
+| `/flex` | In Chat Input | Sends Flexing ASCII emote `ᕙ(⇀‸↼‶)ᕗ` |
+| `/popcorn` | In Chat Input | Sends Popcorn eating ASCII emote `( ˘▽˘)っ♨` |
 | `/me <action>` | In Chat Input | Broadcasts an IRC-style action line (`* User action`) |
 | `/quit`, `/exit` | In Chat Input | Gracefully exits the application |
 
