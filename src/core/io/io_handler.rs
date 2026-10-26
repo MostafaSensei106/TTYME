@@ -46,7 +46,7 @@ fn broadcast_system_message(tx: &broadcast::Sender<String>, username: &str, cont
         user_name: username.to_string(),
         message_content: content.to_string(),
         message_type: MessageType::SystemNotification,
-        timestamp: Local::now().format("%H:%M:%S").to_string(),
+        timestamp: Local::now().format("%I:%M:%S %p").to_string(),
     };
     let _ = tx.send(serde_json::to_string(&message).unwrap());
 }
@@ -102,7 +102,7 @@ fn broadcast_user_message(tx: &broadcast::Sender<String>, username: &str, conten
         user_name: username.to_string(),
         message_content: content.to_string(),
         message_type: MessageType::UserMessage,
-        timestamp: Local::now().format("%H:%M:%S").to_string(),
+        timestamp: Local::now().format("%I:%M:%S %p").to_string(),
     };
     let _ = tx.send(serde_json::to_string(&message).unwrap());
 }
