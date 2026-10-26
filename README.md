@@ -194,12 +194,16 @@ TTYME/
 │       ├── backend/
 │       │   └── main.rs         # TCP server daemon entry point
 │       └── app/
-│           ├── main.rs         # Cursive TUI client & event dispatching
-│           └── core/
-│               ├── mod.rs
-│               └── theme/
-│                   ├── mod.rs
-│                   └── retro.rs # Custom retro palette & border styling
+│           ├── main.rs         # TUI application entry point & orchestration
+│           ├── network/
+│           │   ├── mod.rs      # Network client module definitions
+│           │   └── client.rs   # TCP connection, handshake, & async reader task
+│           └── ui/
+│               ├── mod.rs      # UI components & styling exports
+│               ├── handlers.rs # Input command routing & message dispatching
+│               ├── layout.rs   # Cursive view construction & window hierarchy
+│               ├── message.rs  # StyledString rich message formatting
+│               └── theme.rs    # Retro color palette & border styling
 ```
 
 ---
