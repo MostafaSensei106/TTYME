@@ -8,9 +8,14 @@ use cursive::{
     view::{Nameable, Resizable, Scrollable},
     views::{Dialog, DummyView, EditView, LinearLayout, Panel, ScrollView, TextView},
 };
-use tokio::{io::AsyncWriteExt, net::TcpStream, sync::Mutex};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    net::TcpStream,
+    sync::Mutex,
+};
 
 use crate::core::theme::retro::create_retro_theme;
+use ttyme::core::models::chat_message_model::ChatMessage;
 mod core;
 
 #[tokio::main]
@@ -36,6 +41,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_name("Messages")
         .min_height(20)
         .scrollable();
+
     let messages = ScrollView::new(messages)
         .scroll_strategy(cursive::view::ScrollStrategy::StickToBottom)
         .min_height(60)
@@ -49,7 +55,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .full_width();
 
     let help_text = TextView::new("ESC:quit | Enter:send |comands: /help, /clear, /quit");
-
     let layout = LinearLayout::vertical()
         .child(Panel::new(header))
         .child(
@@ -65,11 +70,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .full_width(),
         )
         .child(Panel::new(help_text).full_width());
+
     let center_layout = LinearLayout::horizontal()
         .child(DummyView.full_width())
         .child(layout)
         .child(DummyView.full_width());
-
     siv.add_fullscreen_layer(center_layout);
 
     siv.add_global_callback(Event::Key(Key::Esc), |s| s.quit());
@@ -80,13 +85,24 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let stream = TcpStream::connect("127.0.0.1:8080").await?;
     let (reader, mut writer) = stream.into_split();
     writer
-        .write_all(format!("{}/n", username).as_bytes())
+        .write_all(format!("{}\n", username).as_bytes())
         .await?;
 
     let wirter = Arc::new(Mutex::new(writer));
+    let writer_clone = Arc::clone(&wirter);
+    siv.set_user_data(wirter);
+    let reader = BufReader::new(reader);
+    let mut lines = reader.lines();
+    let sink = siv.cb_sink().clone();
+
+    // async task
+    tokio::spawn(async move {
+        while let Ok(Some(line)) = lines.next_line().await {
+            if let Ok(_msg) = serde_json::from_str::<ChatMessage>(&line) {}
+        }
+    });
 
     siv.run();
-
     Ok(())
 }
 

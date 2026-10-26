@@ -1,10 +1,8 @@
-use std::error::Error;
-mod core;
 use chrono::Local;
-use core::constants::config::Constants;
+use std::error::Error;
 use tokio::{net::TcpListener, sync::broadcast};
-
-use crate::core::io::io_handler::handle_connection;
+use ttyme::core::constants::config::Constants;
+use ttyme::core::io::io_handler::handle_connection;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

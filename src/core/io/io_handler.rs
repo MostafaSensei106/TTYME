@@ -34,7 +34,11 @@ async fn read_username<R: AsyncRead + Unpin>(reader: &mut BufReader<R>) -> Optio
     if reader.read_line(&mut username).await.unwrap_or(0) == 0 {
         return None;
     }
-    Some(username.trim().to_string())
+    let username = username.trim().to_string();
+    if username.is_empty() {
+        return None;
+    }
+    Some(username)
 }
 
 fn broadcast_system_message(tx: &broadcast::Sender<String>, username: &str, content: &str) {
@@ -100,5 +104,5 @@ fn broadcast_user_message(tx: &broadcast::Sender<String>, username: &str, conten
         message_type: MessageType::UserMessage,
         timestamp: Local::now().format("%H:%M:%S").to_string(),
     };
-    tx.send(serde_json::to_string(&message).unwrap()).unwrap();
+    let _ = tx.send(serde_json::to_string(&message).unwrap());
 }
