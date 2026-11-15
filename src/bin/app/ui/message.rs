@@ -42,6 +42,7 @@ pub fn format_chat_message(message: &ChatMessage, current_user: &str) -> StyledS
             s.append_plain(&message.message_content);
             s.append_plain("\n");
         }
+        MessageType::Typing => {}
         MessageType::SystemNotification => {
             s.append_styled(format!("[{}] ", message.timestamp), time_style);
             s.append_styled(

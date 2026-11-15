@@ -49,6 +49,7 @@ TTYME is a modern client-server terminal chat application designed for low-laten
 - **Thread-Safe Cross-Task Communication**: Coordinates background socket reading and UI event dispatching via thread-safe `CbSink` channels and `Arc<Mutex<OwnedWriteHalf>>`.
 - **System Events & Handshake**: Dynamic join/leave system notifications with microsecond-accurate timestamps powered by `chrono`.
 - **In-Chat Commands**: Built-in interactive slash commands (`/help`, `/clear`, `/quit`) and intuitive keyboard shortcuts.
+- **Typing Indicator**: Shows when another connected user is typing and clears the notice after a short pause or when a message arrives.
 - **Robust JSON Serialization**: Structured message payloads serialized and deserialized using `serde` and `serde_json`.
 
 ---

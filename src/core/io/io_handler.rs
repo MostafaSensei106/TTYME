@@ -77,7 +77,11 @@ async fn handle_chat_loop<R, W>(
                     continue;
                 }
 
-                broadcast_user_message(tx, username, message);
+                if message == "\u{1}typing" {
+                    broadcast_typing(tx, username);
+                } else {
+                    broadcast_user_message(tx, username, message);
+                }
                 line.clear();
             }
             result = rx.recv() => {
@@ -102,6 +106,16 @@ fn broadcast_user_message(tx: &broadcast::Sender<String>, username: &str, conten
         user_name: username.to_string(),
         message_content: content.to_string(),
         message_type: MessageType::UserMessage,
+        timestamp: Local::now().format("%I:%M:%S %p").to_string(),
+    };
+    let _ = tx.send(serde_json::to_string(&message).unwrap());
+}
+
+fn broadcast_typing(tx: &broadcast::Sender<String>, username: &str) {
+    let message = ChatMessage {
+        user_name: username.to_string(),
+        message_content: String::new(),
+        message_type: MessageType::Typing,
         timestamp: Local::now().format("%I:%M:%S %p").to_string(),
     };
     let _ = tx.send(serde_json::to_string(&message).unwrap());

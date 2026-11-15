@@ -38,6 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         writer,
         username: username.clone(),
         server_addr: server_addr.clone(),
+        last_typing_sent_ms: std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
 
     //  Start background listener for incoming broadcast messages

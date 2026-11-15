@@ -12,4 +12,5 @@ pub struct ChatMessage {
 pub enum MessageType {
     UserMessage,
     SystemNotification,
+    Typing,
 }

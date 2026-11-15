@@ -8,7 +8,7 @@ use cursive::{
     views::{DummyView, EditView, LinearLayout, Panel, ScrollView, TextView},
 };
 
-use crate::ui::handlers::handle_submit;
+use crate::ui::handlers::{handle_input_change, handle_submit};
 use crate::ui::theme::create_app_theme;
 
 /// Builds and configures the Cursive TUI environment with pure ASCII styling and widescreen (16:9) layout.
@@ -53,11 +53,13 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
             Color::Light(BaseColor::White),
             Color::Dark(BaseColor::Black),
         ))
+        .on_edit(|s, content, _| handle_input_change(s, content))
         .on_submit(|s, text| handle_submit(s, text.to_string()))
         .with_name("Input")
         .full_width();
 
     let input_row = LinearLayout::horizontal().child(prompt).child(input);
+    let typing_view = TextView::new("").with_name("Typing");
 
     let input_panel = Panel::new(input_row)
         .title("[ INPUT ] (Type message and press Enter | / for Commands)")
@@ -75,6 +77,7 @@ pub fn build_ui(username: &str, server_addr: &str) -> Cursive {
     let main_layout = LinearLayout::vertical()
         .child(header)
         .child(messages_panel)
+        .child(typing_view)
         .child(input_panel)
         .child(footer);
 

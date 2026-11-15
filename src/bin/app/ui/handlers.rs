@@ -1,7 +1,7 @@
 use chrono::Local;
 use cursive::Cursive;
 use cursive::views::{EditView, TextView};
-use std::sync::Arc;
+use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
 use tokio::io::AsyncWriteExt;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::sync::Mutex;
@@ -14,6 +14,31 @@ pub struct AppState {
     pub writer: Arc<Mutex<OwnedWriteHalf>>,
     pub username: String,
     pub server_addr: String,
+    pub last_typing_sent_ms: Arc<AtomicU64>,
+}
+
+/// Sends a throttled typing event while the user edits a non-empty message.
+pub fn handle_input_change(s: &mut Cursive, content: &str) {
+    if content.trim().is_empty() {
+        return;
+    }
+    let Some(state) = s.user_data::<AppState>().cloned() else {
+        return;
+    };
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+    let previous = state.last_typing_sent_ms.load(Ordering::Relaxed);
+    if now.saturating_sub(previous) < 900
+        || state.last_typing_sent_ms.compare_exchange(previous, now, Ordering::Relaxed, Ordering::Relaxed).is_err()
+    {
+        return;
+    }
+    tokio::spawn(async move {
+        let mut writer = state.writer.lock().await;
+        let _ = writer.write_all(b"\x01typing\n").await;
+    });
 }
 
 /// Handles submission from the chat input box.
