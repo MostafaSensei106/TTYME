@@ -152,6 +152,25 @@ cargo run --bin app -- Alice
 cargo run --bin app -- Bob
 ```
 
+#### Connect over a local network
+
+On the server machine, listen on its LAN IP and your chosen port (replace `192.168.1.10` with that machine's actual IP):
+
+```bash
+cargo run --bin backend -- --host 192.168.1.10:9000
+```
+
+Alternatively, use `--host 0.0.0.0:9000` to listen on all IPv4 interfaces.
+
+On each client machine on the same network:
+
+```bash
+cargo run --bin app -- Alice --host 192.168.1.10:9000
+cargo run --bin app -- Bob --host 192.168.1.10 --port 9000
+```
+
+Use the server's actual LAN IP in clients, and allow incoming TCP traffic on the selected server port in your firewall. The selected address appears in the client UI and `/whoami`. Without these options, both binaries still use `127.0.0.1:8080`.
+
 The server console immediately registers each incoming client and logs connection activity:
 
 ```text
@@ -316,7 +335,7 @@ pub enum MessageType {
 ### Core Components Breakdown
 
 #### `backend` (`src/bin/backend/main.rs`)
-- Binds a non-blocking `TcpListener` to the address resolved from `Constants`.
+- Binds a non-blocking `TcpListener` to the address selected with `--host` / `--port`, falling back to `Constants` defaults.
 - Creates a `tokio::sync::broadcast::channel::<String>(50)` channel.
 - Dispatches each accepted connection to `handle_connection(socket, tx, rx)` inside a green thread (`tokio::spawn`).
 
@@ -389,9 +408,23 @@ impl Default for Constants {
 }
 ```
 
-To configure custom binding parameters or ports for custom environments:
-1. Modify `host` or `port` defaults in `Constants::default()`.
-2. Recompile using `cargo build --release`.
+Override the address at runtime without recompiling:
+
+| Option | Client (`app`) | Server (`backend`) |
+| :--- | :--- | :--- |
+| `--host IP` | Connect to this IP, using port `8080` unless overridden | Listen on this IP, using port `8080` unless overridden |
+| `--host IP:PORT` | Connect to this IP and port | Listen on this IP and port |
+| `--port PORT` | Override the connection port | Override the listening port |
+| `-h`, `--help` | Show usage and exit | Show usage and exit |
+
+The client requires a username; options can appear before or after it. Ports must be between `1` and `65535`. If a port is supplied more than once, the last supplied port wins. Use brackets for IPv6 addresses with an inline port, such as `--host '[::1]:9000'`, or pass the port separately with `--host ::1 --port 9000`.
+
+These options also work with standalone binaries:
+
+```bash
+./target/release/backend --host 192.168.1.10:9000
+./target/release/app Alice --host 192.168.1.10:9000
+```
 
 ---
 
@@ -407,6 +440,8 @@ To configure custom binding parameters or ports for custom environments:
 | `cargo check --bin app` | Checks only the Cursive TUI client |
 | `cargo run --bin backend` | Starts the TCP broadcast server daemon |
 | `cargo run --bin app -- <name>` | Launches a client session with the specified username |
+| `cargo run --bin backend -- --host 0.0.0.0:9000` | Starts the server on all IPv4 interfaces, port 9000 |
+| `cargo run --bin app -- <name> --host 192.168.1.10:9000` | Connects a client to a server on the local network |
 | `cargo test` | Runs the test suite |
 | `cargo clean` | Removes compiled artifacts from `target/` |
 
@@ -581,15 +616,16 @@ docker run -d \
   ```
 
 ### 2. `Connection refused (os error 111)` on Client Launch
-- **Cause**: The client cannot reach the server at `127.0.0.1:8080`.
+- **Cause**: The client cannot reach the selected server address (default: `127.0.0.1:8080`).
 - **Solution**:
   1. Ensure the `backend` binary is running:
      ```bash
      pgrep -l backend
      ```
-  2. If connecting to a remote server, verify firewall permissions allow traffic on port `8080`:
+  2. For a LAN connection, start the backend with its LAN IP or `0.0.0.0`, then pass the server's LAN IP and matching port to the client using `--host IP:PORT`. A backend listening only on `127.0.0.1` cannot accept connections from other machines.
+  3. Verify firewall permissions allow traffic on the selected server port (for example, `9000`):
      ```bash
-     sudo ufw allow 8080/tcp
+     sudo ufw allow 9000/tcp
      ```
 
 ### 3. `Please provide a username as an argument`

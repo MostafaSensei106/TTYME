@@ -1,6 +1,6 @@
 use cursive::CursiveExt;
 use std::{env, error::Error};
-use ttyme::core::constants::config::Constants;
+use ttyme::core::cli::Options;
 
 mod network;
 mod ui;
@@ -11,19 +11,23 @@ use ui::layout::build_ui;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let username = match env::args().nth(1) {
-        Some(name) if !name.trim().is_empty() => name.trim().to_string(),
-        _ => {
-            eprintln!("Usage: cargo run --bin app -- <username>");
-            std::process::exit(1);
+    let options = match Options::parse(env::args().skip(1), true) {
+        Ok(options) => options,
+        Err(error) => {
+            eprintln!("{error}\n{}", Options::usage(true));
+            std::process::exit(2);
         }
     };
+    if options.help {
+        println!("{}", Options::usage(true));
+        return Ok(());
+    }
+    let username = options.username.unwrap();
 
-    let config = Constants::default();
-    let server_addr = format!("{}:{}", config.host, config.port);
+    let server_addr = options.address.to_string();
 
     // Establish connection and complete initial handshake
-    let (reader, writer) = connect_server(config.host, config.port, &username).await?;
+    let (reader, writer) = connect_server(options.address, &username).await?;
 
     //  Construct TUI view hierarchy
     let mut siv = build_ui(&username, &server_addr);

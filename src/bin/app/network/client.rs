@@ -1,9 +1,10 @@
-use std::error::Error;
-use std::sync::Arc;
 use cursive::{CbSink, Cursive};
+use std::error::Error;
+use std::net::SocketAddr;
+use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpStream;
+use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::sync::Mutex;
 use ttyme::core::models::chat_message_model::ChatMessage;
 
@@ -12,11 +13,10 @@ use crate::ui::message::{format_chat_message, format_error_notice};
 
 /// Establishes the TCP connection and completes the initial username handshake.
 pub async fn connect_server(
-    host: &str,
-    port: u16,
+    address: SocketAddr,
     username: &str,
 ) -> Result<(OwnedReadHalf, Arc<Mutex<OwnedWriteHalf>>), Box<dyn Error>> {
-    let stream = TcpStream::connect(format!("{host}:{port}")).await?;
+    let stream = TcpStream::connect(address).await?;
     let (reader, mut writer) = stream.into_split();
 
     // Handshake: send username with trailing newline
