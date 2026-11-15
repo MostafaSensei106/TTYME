@@ -32,6 +32,7 @@ TTYME is a modern client-server terminal chat application designed for low-laten
 - [Testing](#testing)
 - [Production Deployment](#production-deployment)
   - [Standalone Release Binaries](#standalone-release-binaries)
+  - [Windows and Linux Release Packages](#windows-and-linux-release-packages)
   - [Systemd Service Setup (Linux VPS)](#systemd-service-setup-linux-vps)
   - [Docker Containerization](#docker-containerization)
 - [Troubleshooting](#troubleshooting)
@@ -509,6 +510,59 @@ The resulting standalone executables will be located in:
 Transfer the `backend` binary to your server:
 ```bash
 scp target/release/backend user@your-server-ip:/usr/local/bin/ttyme-server
+```
+
+---
+
+### Windows and Linux Release Packages
+
+Release packages are generated in `release/` for both programs: `ttyme-client` (the `app` binary) and `ttyme-server` (the `backend` binary).
+
+| OS | Architectures | Package format |
+| :--- | :--- | :--- |
+| Windows | `x86` (32-bit), `x86_64` (64-bit), `arm64` (AArch64) | `.zip` |
+| Linux | `x86` (32-bit), `x86_64` (64-bit), `arm64` (AArch64) | `.tar.gz` |
+
+File names include the program, version from `Cargo.toml`, operating system, and architecture. For version `0.1.0`, examples are:
+
+```text
+release/ttyme-client-v0.1.0-windows-x86_64.zip
+release/ttyme-server-v0.1.0-linux-arm64.tar.gz
+release/SHA256SUMS.txt
+release/bin/ttyme-client-v0.1.0-windows-x86_64.exe
+release/bin/ttyme-server-v0.1.0-linux-arm64
+```
+
+Each archive includes its executable and this README. Linux executables use static musl linking. ARM builds target **ARM64**, not 32-bit ARM. Upload the 12 archives and `SHA256SUMS.txt` to GitHub Releases; the `release/` directory is excluded from Git source control.
+
+After extracting the matching package, run the executable from a terminal. For example:
+
+```bash
+# Linux server
+./ttyme-server-v0.1.0-linux-x86_64 --host 0.0.0.0:9000
+```
+
+```powershell
+# Windows client (PowerShell): replace the IP with the server's LAN IP
+.\ttyme-client-v0.1.0-windows-x86_64.exe Alice --host 192.168.1.10:9000
+```
+
+To rebuild all packages on an x86_64 Linux build machine, install Python 3.11+, Rust, the GNU MinGW compilers (`x86_64-w64-mingw32-gcc` and `i686-w64-mingw32-gcc`), and an extracted [LLVM-MinGW toolchain](https://github.com/mstorsjo/llvm-mingw/releases) for Windows ARM64. Linker settings are in `.cargo/config.toml`.
+
+```bash
+rustup target add \
+  x86_64-unknown-linux-musl i686-unknown-linux-musl aarch64-unknown-linux-musl \
+  x86_64-pc-windows-gnu i686-pc-windows-gnu aarch64-pc-windows-gnullvm
+cargo fetch --locked
+python3 scripts/build-release.py --llvm-mingw /path/to/llvm-mingw
+```
+
+The script builds with the release optimization settings in `Cargo.toml`, uses the lockfile and cached dependencies, and generates archives plus SHA256 checksums. To build only one platform, pass `--target`, for example:
+
+```bash
+python3 scripts/build-release.py --target x86_64-unknown-linux-musl
+cd release
+sha256sum -c SHA256SUMS.txt
 ```
 
 ---
