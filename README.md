@@ -380,12 +380,16 @@ pub enum MessageType {
 | `/noob` | In Chat Input | Sends `[NOOB] Skill issue detected!` |
 | `/sus` | In Chat Input | Sends Among Us ASCII emote `ඞ [SUS]` |
 | `/doge` | In Chat Input | Sends Doge ASCII emote `(◕ᴥ◕)` |
-| `/cat` | In Chat Input | Sends Cat ASCII emote `(=^･ω･^=)` |
+| `/cat` | In Chat Input | Expands to a cat emote anywhere in a message |
+| `$cat`, `$dog` | In Chat Input | Sends a multi-line cat or dog ASCII drawing |
 | `/dance` | In Chat Input | Sends Dancing ASCII emote |
 | `/flex` | In Chat Input | Sends Flexing ASCII emote `ᕙ(⇀‸↼‶)ᕗ` |
 | `/popcorn` | In Chat Input | Sends Popcorn eating ASCII emote `( ˘▽˘)っ♨` |
 | `/me <action>` | In Chat Input | Broadcasts an IRC-style action line (`* User action`) |
 | `/quit`, `/exit` | In Chat Input | Gracefully exits the application |
+
+
+Slash emotes such as `/cat`, `/shrug`, and `/party` can also appear inline in normal messages and are expanded before sending. Use `$cat`, `$dog`, `$bunny`/`$rabbit`, `$bear`, `$fox`, `$panda`, `$owl`, `$frog`, `$penguin`, `$hamster`, `$duck`, or `$koala` by itself to send a multi-line ASCII drawing.
 
 ---
 

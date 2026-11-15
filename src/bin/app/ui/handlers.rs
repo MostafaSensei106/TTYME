@@ -28,9 +28,10 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
 
     let state = s.user_data::<AppState>().cloned();
 
-    // Check if the command is a quick meme / emoticon command
-    if let Some(emoticon) = resolve_emoticon_command(&text) {
-        send_network_payload(state, emoticon.to_string(), s);
+    // Expand known emotes and ASCII drawings anywhere in the message.
+    let text = resolve_inline_tokens(&text);
+    if let Some(drawing) = resolve_ascii_command(&text) {
+        send_network_payload(state, drawing.to_string(), s);
         return;
     }
 
@@ -86,16 +87,19 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
                    /cry         - (╥﹏╥) *sobs*\n\
                    /cool        - ( •_•)>⌐■-■ (⌐■_■) Deal with it.\n\
                  \n\
-                 [ Arsenal Banter ]\n\
-                   /gooner      - Arsenal fan detected\n\
-                   /arsenal     - Arsenal banter\n\
-                   /bottled     - Arsenal bottled it again\n\
-                   /fourth      - 4th place is the real trophy\n\
-                   /trophyless  - Arsenal's trophy cabinet\n\
-                   /arteta      - Trust the process\n\
-                 \n\
                  [ ASCII Art ]\n\
-                   /gonner      - Big ASCII drawing\n\
+                   $cat         - Send a cat drawing\n\
+                   $dog         - Send a dog drawing\n\
+                   $bunny, $rabbit - Send a bunny drawing\n\
+                   $bear        - Send a bear drawing\n\
+                   $fox         - Send a fox drawing\n\
+                   $panda       - Send a panda drawing\n\
+                   $owl         - Send an owl drawing\n\
+                   $frog        - Send a frog drawing\n\
+                   $penguin     - Send a penguin drawing\n\
+                   $hamster     - Send a hamster drawing\n\
+                   $duck        - Send a duck drawing\n\
+                   $koala       - Send a koala drawing\n\
                  =============================================================",
             );
             append_to_messages(s, help_msg);
@@ -140,9 +144,34 @@ pub fn handle_submit(s: &mut Cursive, text: String) {
     }
 }
 
-/// Resolves quick ASCII emotes and memes commands.
+/// Expands recognized slash emotes anywhere in a message.
+fn resolve_inline_tokens(text: &str) -> String {
+    text.split_whitespace()
+        .map(|word| {
+            let (prefix, token) = word
+                .char_indices()
+                .find(|(_, ch)| *ch == '/')
+                .map_or((word, ""), |(i, _)| (&word[..i], &word[i..]));
+            let token_end = token
+                .char_indices()
+                .find(|(_, ch)| !ch.is_ascii_alphanumeric() && *ch != '_')
+                .map_or(token.len(), |(i, _)| i);
+            if token_end == 0 {
+                return word.to_string();
+            }
+            let command = &token[..token_end];
+            let suffix = &token[token_end..];
+            resolve_emoticon_command(command)
+                .map(|emote| format!("{prefix}{emote}{suffix}"))
+                .unwrap_or_else(|| word.to_string())
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Resolves slash emote names.
 fn resolve_emoticon_command(cmd: &str) -> Option<&'static str> {
-    match cmd {
+    match cmd.to_ascii_lowercase().as_str() {
         "/kiwi" => Some("(◕ө◕) [Kiwi]"),
         "/kawaii" => Some("(✿◕‿◕) [Kawaii]"),
         "/uwu" => Some("(ᵘﻌᵘ) [uwu]"),
@@ -176,30 +205,54 @@ fn resolve_emoticon_command(cmd: &str) -> Option<&'static str> {
         "/copium" => Some("[COPIUM] (´• ω •) *inhales copium*"),
         "/cry" => Some("(╥﹏╥) *sobs*"),
         "/cool" => Some("( •_•)>⌐■-■ (⌐■_■) Deal with it."),
+        _ => None,
+    }
+}
 
-        // Arsenal banter
-        "/gooner" => Some("[GOONER] Arsenal fan detected... trophy cabinet loading 0%"),
-        "/arsenal" => Some("Arsenal: Elite at leading the table until it matters"),
-        "/bottled" => Some("[BOTTLED] Arsenal bottled it again, classic!"),
-        "/fourth" | "/4th" => Some("St. Totteringham's Day? Nah, 4th place is the real trophy"),
-        "/trophyless" => Some("Arsenal trophy cabinet: [ EMPTY ] (ಠ_ಠ) Bruh..."),
-        "/arteta" => Some("Arteta: 'Trust the process' ¯\\_(ツ)_/¯"),
-
-        // ASCII drawing (multi-line, sent line by line)
-        "/gonner" => Some(
-            r#"    ,-.
-   (   )
-   |   |
-   |   |
-   |   |
-   |   |
-   |   |
-   |   |
- ,-'   '-.
-(   ) (   )
- `-'   `-'"#,
-        ),
-
+/// Resolves commands that send multi-line ASCII drawings.
+fn resolve_ascii_command(cmd: &str) -> Option<&'static str> {
+    match cmd.trim().to_ascii_lowercase().as_str() {
+        "$cat" => Some(r#" /\_/\
+( o.o )
+ > ^ <"#),
+        "$dog" => Some(r#"/ \__
+   (    @\___
+   /         O
+  /   (_____/
+ /_____/   U"#),
+        "$bunny" | "$rabbit" => Some(r#"(\_/)
+( •.•)
+/ >🥕"#),
+        "$bear" => Some(r#" ʕ•ᴥ•ʔ
+ /|   |\
+  |___|"#),
+        "$fox" => Some(r#" /\   /\
+(  o   o  )
+  >  ^  <"#),
+        "$panda" => Some(r#"  ʕ●ᴥ●ʔ
+ (  ◡  )
+  (___)"#),
+        "$owl" => Some(r#" ,_,
+(O,O)
+(   )
+-""-"#),
+        "$frog" => Some(r#" @..@
+(----)
+( >__< )"#),
+        "$penguin" => Some(r#"  .--.
+ (o_o )
+ /|_|\
+  / \"#),
+        "$hamster" => Some(r#" (\__/)
+ (='.'=)
+ (")_(")"#),
+        "$duck" => Some(r#"  __
+<(o )___
+ ( ._> /
+  `---'"#),
+        "$koala" => Some(r#" (ᵔᴥᵔ)
+ /|   |\
+  |___|"#),
         _ => None,
     }
 }
