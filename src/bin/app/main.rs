@@ -1,33 +1,25 @@
+use clap::Parser;
 use cursive::CursiveExt;
-use std::{env, error::Error};
-use ttyme::core::cli::Options;
+use std::error::Error;
+use ttyme::core::cli::ClientOptions;
 
 mod network;
 mod ui;
 
-use network::client::{connect_server, spawn_reader};
+use network::{connection::connect_server, reader::spawn_reader};
 use ui::handlers::AppState;
 use ui::layout::build_ui;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let options = match Options::parse(env::args().skip(1), true) {
-        Ok(options) => options,
-        Err(error) => {
-            eprintln!("{error}\n{}", Options::usage(true));
-            std::process::exit(2);
-        }
-    };
-    if options.help {
-        println!("{}", Options::usage(true));
-        return Ok(());
-    }
-    let username = options.username.unwrap();
+    let options = ClientOptions::parse();
+    let address = options.address();
+    let username = options.username;
 
-    let server_addr = options.address.to_string();
+    let server_addr = address.to_string();
 
     // Establish connection and complete initial handshake
-    let (reader, writer) = connect_server(options.address, &username).await?;
+    let (reader, writer) = connect_server(address, &username).await?;
 
     //  Construct TUI view hierarchy
     let mut siv = build_ui(&username, &server_addr);

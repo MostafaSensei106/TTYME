@@ -1,23 +1,14 @@
 use chrono::Local;
-use std::{env, error::Error};
+use clap::Parser;
+use std::error::Error;
 use tokio::{net::TcpListener, sync::broadcast};
-use ttyme::core::cli::Options;
+use ttyme::core::cli::BackendOptions;
 use ttyme::core::io::io_handler::handle_connection;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let options = match Options::parse(env::args().skip(1), false) {
-        Ok(options) => options,
-        Err(error) => {
-            eprintln!("{error}\n{}", Options::usage(false));
-            std::process::exit(2);
-        }
-    };
-    if options.help {
-        println!("{}", Options::usage(false));
-        return Ok(());
-    }
-    let listener = TcpListener::bind(options.address).await?;
+    let options = BackendOptions::parse();
+    let listener = TcpListener::bind(options.address()).await?;
 
     println!(
         r#"

@@ -47,7 +47,8 @@ TTYME is a modern client-server terminal chat application designed for low-laten
 - **Broadcast Architecture**: Utilizes `tokio::sync::broadcast` multi-producer, multi-consumer channels to fan out messages effortlessly to all active subscribers.
 - **Interactive Retro TUI**: Designed using `cursive` with custom retro color palettes, drop shadows, panel framing, and automatic stick-to-bottom scroll management.
 - **Thread-Safe Cross-Task Communication**: Coordinates background socket reading and UI event dispatching via thread-safe `CbSink` channels and `Arc<Mutex<OwnedWriteHalf>>`.
-- **System Events & Handshake**: Dynamic join/leave system notifications with microsecond-accurate timestamps powered by `chrono`.
+- **System Events & Handshake**: Dynamic join/leave system notifications with timestamps powered by `chrono`.
+- **Typed CLI**: Clear, validated client and server options with generated `--help` output powered by `clap`.
 - **In-Chat Commands**: Built-in interactive slash commands (`/help`, `/clear`, `/quit`) and intuitive keyboard shortcuts.
 - **Typing Indicator**: Shows when another connected user is typing and clears the notice after a short pause or when a message arrives.
 - **Robust JSON Serialization**: Structured message payloads serialized and deserialized using `serde` and `serde_json`.
@@ -144,14 +145,14 @@ Upon launching, the server binds to `127.0.0.1:8080` and displays its startup ba
 
 Open one or more separate terminal windows to join the chat. Provide your desired username as a command-line argument:
 
-#### Terminal Client 1 (Alice):
+#### Terminal Client 1 (Mostafa):
 ```bash
-cargo run --bin app -- Alice
+cargo run --bin app -- Mostafa
 ```
 
-#### Terminal Client 2 (Bob):
+#### Terminal Client 2 (Rawda):
 ```bash
-cargo run --bin app -- Bob
+cargo run --bin app -- Rawda
 ```
 
 #### Connect over a local network
@@ -167,8 +168,8 @@ Alternatively, use `--host 0.0.0.0:9000` to listen on all IPv4 interfaces.
 On each client machine on the same network:
 
 ```bash
-cargo run --bin app -- Alice --host 192.168.1.10:9000
-cargo run --bin app -- Bob --host 192.168.1.10 --port 9000
+cargo run --bin app -- Mostafa --host 192.168.1.10:9000
+cargo run --bin app -- Rawda --host 192.168.1.10 --port 9000
 ```
 
 Use the server's actual LAN IP in clients, and allow incoming TCP traffic on the selected server port in your firewall. The selected address appears in the client UI and `/whoami`. Without these options, both binaries still use `127.0.0.1:8080`.
@@ -183,7 +184,7 @@ The server console immediately registers each incoming client and logs connectio
 └─ Address: 127.0.0.1:54322
 ```
 
-Both clients will see system notifications (e.g., `[14:40:12] [System] Alice Joined the chat`) and can exchange live messages in real time!
+Both clients will see system notifications (e.g., `[14:40:12] [System] Mostafa Joined the chat`) and can exchange live messages in real time!
 
 ---
 
@@ -237,7 +238,7 @@ TTYME/
 +-------------------------------------------------------------------------------+
 
   +-----------------------+                    +-----------------------+
-  |   Client A (Alice)    |                    |    Client B (Bob)     |
+  |   Client A (Mostafa)    |                    |    Client B (Rawda)     |
   |  [Cursive TUI / App]  |                    |  [Cursive TUI / App]  |
   +-----------+-----------+                    +-----------+-----------+
               |                                            ^
@@ -250,7 +251,7 @@ TTYME/
       |  1. listener.accept() -> tokio::spawn(handle_connection)   |
       |  2. Read line -> Parse text                                |
       |  3. Construct ChatMessage {                                |
-      |        user_name: "Alice",                                 |
+      |        user_name: "Mostafa",                                 |
       |        message_content: "Hello",                           |
       |        message_type: UserMessage,                          |
       |        timestamp: "14:42:01"                               |
@@ -270,7 +271,7 @@ TTYME/
          v                                                   v
   +---------------+                                   +---------------+
   |  Receiver A   |                                   |  Receiver B   |
-  | (Alice's rx)  |                                   |  (Bob's rx)   |
+  | (Mostafa's rx)  |                                   |  (Rawda's rx)   |
   +-------+-------+                                   +-------+-------+
           |                                                   |
           v                                                   v
@@ -279,7 +280,7 @@ TTYME/
           v                                                   v
   Client A UI Screen                                  Client B UI Screen
   "- [14:42:01]                                       "- [14:42:01]
-   -> Alice > Hello"                                   -> Alice > Hello"
+   -> Mostafa > Hello"                                   -> Mostafa > Hello"
 ```
 
 ---
@@ -291,7 +292,7 @@ Communication over the TCP stream uses newline-delimited JSON (`\n`).
 #### 1. Connection Handshake
 Immediately upon establishing a TCP connection, the client sends a single newline-terminated string containing the username:
 ```text
-Alice\n
+Mostafa\n
 ```
 
 #### 2. Message Payload Schema
@@ -299,7 +300,7 @@ Every event broadcast by the server is formatted as a JSON object adhering to [`
 
 ```json
 {
-  "user_name": "Alice",
+  "user_name": "Mostafa",
   "message_content": "Joined the chat",
   "message_type": "SystemNotification",
   "timestamp": "06:40:12 PM"
@@ -308,7 +309,7 @@ Every event broadcast by the server is formatted as a JSON object adhering to [`
 
 ```json
 {
-  "user_name": "Alice",
+  "user_name": "Mostafa",
   "message_content": "Hey everyone, welcome to TTYME!",
   "message_type": "UserMessage",
   "timestamp": "06:40:35 PM"
@@ -423,13 +424,13 @@ Override the address at runtime without recompiling:
 | `--port PORT` | Override the connection port | Override the listening port |
 | `-h`, `--help` | Show usage and exit | Show usage and exit |
 
-The client requires a username; options can appear before or after it. Ports must be between `1` and `65535`. If a port is supplied more than once, the last supplied port wins. Use brackets for IPv6 addresses with an inline port, such as `--host '[::1]:9000'`, or pass the port separately with `--host ::1 --port 9000`.
+The client requires a username; options can appear before or after it. Ports must be between `1` and `65535`. A value supplied with `--port` overrides a port included in `--host`. Use `--help` on either binary for generated usage and option details. Use brackets for IPv6 addresses with an inline port, such as `--host '[::1]:9000'`, or pass the port separately with `--host ::1 --port 9000`.
 
 These options also work with standalone binaries:
 
 ```bash
 ./target/release/backend --host 192.168.1.10:9000
-./target/release/app Alice --host 192.168.1.10:9000
+./target/release/app Mostafa --host 192.168.1.10:9000
 ```
 
 ---
@@ -549,7 +550,7 @@ After extracting the matching package, run the executable from a terminal. For e
 
 ```powershell
 # Windows client (PowerShell): replace the IP with the server's LAN IP
-.\ttyme-client-v0.1.0-windows-x86_64.exe Alice --host 192.168.1.10:9000
+.\ttyme-client-v0.1.0-windows-x86_64.exe Mostafa --host 192.168.1.10:9000
 ```
 
 To rebuild all packages on an x86_64 Linux build machine, install Python 3.11+, Rust, the GNU MinGW compilers (`x86_64-w64-mingw32-gcc` and `i686-w64-mingw32-gcc`), and an extracted [LLVM-MinGW toolchain](https://github.com/mstorsjo/llvm-mingw/releases) for Windows ARM64. Linker settings are in `.cargo/config.toml`.
